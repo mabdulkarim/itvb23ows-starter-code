@@ -11,6 +11,6 @@ function set_state($state) {
     $_SESSION['player'] = $c;
 }
 
-return new mysqli('db', 'root', '', 'hive');
+return new mysqli('localhost', 'root', '${MYSQL_ROOT_PASSWORD}', 'hive');
 
 ?>
