@@ -1,0 +1,8 @@
+/.idea
+.env
+.scannerwork
+sonar-project.properties
+*.lock
+**/vendor
+**/ignore
+**.cache
