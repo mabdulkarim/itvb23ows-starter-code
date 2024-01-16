@@ -1,0 +1,18 @@
+version: "3"
+
+services:
+  webapp:
+    build: ./webapp/
+    depends_on:
+      - db
+    command: php -S 0.0.0.0:80
+    ports:
+      - "${WEB_APP_PORT}:80"
+  db:
+    build: ./db/
+    image: mysql
+    restart: always
+    environment:
+      MYSQL_DATABASE: hive
+      MYSQL_ALLOW_EMPTY_PASSWORD:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
