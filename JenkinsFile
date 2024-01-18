@@ -5,12 +5,23 @@ pipeline {
         stage('Build') {
             steps {
                 echo 'Building the project...'
+                checkout scm
             }
         }
 
         stage('Test') {
             steps {
                 echo 'Running tests...'
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                script { scannerHome = tool 'SonarQube-Scanner-Mohamed' }
+                withSonarQubeEnv('Hive-SonarQube-Server') {
+                    sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=hive-dev-mike -Dsonar.login=squ_c8387fd407011542b7822b22bc10b189fb870f07"
+                }
+                echo 'Sonarqube working...'
             }
         }
 
