@@ -38,7 +38,7 @@ services:
     build: ./sonarqube/
     image: sonarqube
     ports:
-      - "9000:9000"
+      - "${SONARQUBE_PORT}:9000"
     depends_on:
       - db
     networks:
