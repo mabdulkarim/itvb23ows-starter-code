@@ -17,9 +17,12 @@ pipeline {
 
         stage('SonarQube Analysis') {
             steps {
-                script { scannerHome = tool 'SonarQube-Scanner-Mohamed' }
+                script {
+                    def envVars = readProperties file: '.env'
+                    scannerHome = tool 'SonarQube-Scanner-Mohamed'
+                }
                 withSonarQubeEnv('SonarQube-Server-Mohamed') {
-                    sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=Mohamed -Dsonar.login=${SONARQUBE_TOKEN}"
+                    sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=Mohamed -Dsonar.login=${envVars['SONARQUBE_TOKEN']}"
                 }
                 echo 'Sonarqube working...'
             }
