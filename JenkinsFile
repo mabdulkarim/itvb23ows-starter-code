@@ -21,7 +21,7 @@ pipeline {
                     scannerHome = tool 'SonarQube-Scanner-Mohamed'
                 }
                 withSonarQubeEnv('SonarQube-Server-Mohamed') {
-                    sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=Mohamed -Dsonar.login=squ_c8387fd407011542b7822b22bc10b189fb870f07"
+                    sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=Mohamed -Dsonar.login=squ_2d93c700f7e12f75f4d3aa87f7ab13ea1d5cdf7d"
                 }
                 echo 'Sonarqube working...'
             }
