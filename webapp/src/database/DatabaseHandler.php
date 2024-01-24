@@ -12,12 +12,12 @@ class DatabaseHandler
         $this->db = new mysqli('localhost', 'root', '', 'hive');
     }
 
-    private function get_state()
+    private function getState()
     {
         return serialize([$_SESSION['hand'], $_SESSION['board'], $_SESSION['player']]);
     }
 
-    private function set_state($state)
+    private function setState($state)
     {
         list($a, $b, $c) = unserialize($state);
         $_SESSION['hand'] = $a;
