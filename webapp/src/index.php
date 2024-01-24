@@ -99,6 +99,7 @@
                     }
                 ?>
             </select>
+            <input type="hidden" name="action" value="play">
             <input type="submit" value="Play">
         </form>
         <form method="post" action="move.php">
@@ -116,12 +117,15 @@
                     }
                 ?>
             </select>
+            <input type="hidden" name="action" value="move">
             <input type="submit" value="Move">
         </form>
         <form method="post" action="pass.php">
+        <input type="hidden" name="action" value="pass">
             <input type="submit" value="Pass">
         </form>
         <form method="post" action="restart.php">
+        <input type="hidden" name="action" value="restart">
             <input type="submit" value="Restart">
         </form>
         <strong><?php if (isset($_SESSION['error'])) echo($_SESSION['error']); unset($_SESSION['error']); ?></strong>
@@ -134,6 +138,7 @@
             ?>
         </ol>
         <form method="post" action="undo.php">
+        <input type="hidden" name="action" value="undo">
             <input type="submit" value="Undo">
         </form>
     </body>
