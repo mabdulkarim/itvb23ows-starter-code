@@ -24,4 +24,11 @@ class DatabaseHandler
         $_SESSION['board'] = $b;
         $_SESSION['player'] = $c;
     }
+
+    public function getPreviousMoves($game_id)
+    {
+        $stmt = $this->db->prepare('SELECT * FROM moves WHERE game_id = '.$game_id);
+        $stmt->execute();
+        return  $stmt->get_result();
+    }
 }

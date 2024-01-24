@@ -1,7 +1,13 @@
 <?php
     session_start();
 
+    use database\DatabaseHandler;
+
+    require_once './vendor/autoload.php';
+
     include_once 'util.php';
+
+    $db = new DatabaseHandler();
 
     if (!isset($_SESSION['board'])) {
         header('Location: restart.php');
@@ -121,10 +127,7 @@
         <strong><?php if (isset($_SESSION['error'])) echo($_SESSION['error']); unset($_SESSION['error']); ?></strong>
         <ol>
             <?php
-                $db = include 'database.php';
-                $stmt = $db->prepare('SELECT * FROM moves WHERE game_id = '.$_SESSION['game_id']);
-                $stmt->execute();
-                $result = $stmt->get_result();
+                $result = $db->getPreviousMoves($_SESSION['game_id']);
                 while ($row = $result->fetch_array()) {
                     echo '<li>'.$row[2].' '.$row[3].' '.$row[4].'</li>';
                 }
