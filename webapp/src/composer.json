@@ -1,0 +1,15 @@
+{
+    "name": "m-abd/src",
+    "autoload": {
+        "psr-4": {
+            "database\\": "./database/"
+        }
+    },
+    "authors": [
+        {
+            "name": "M Abdulkarim",
+            "email": "69695051+mabdulkarim@users.noreply.github.com"
+        }
+    ],
+    "require": {}
+}
