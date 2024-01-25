@@ -2,7 +2,8 @@
     "name": "m-abd/src",
     "autoload": {
         "psr-4": {
-            "database\\": "./database/"
+            "database\\": "./database/",
+            "classes\\": "./classes/"
         }
     },
     "authors": [

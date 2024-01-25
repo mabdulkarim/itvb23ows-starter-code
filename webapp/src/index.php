@@ -2,12 +2,19 @@
     session_start();
 
     use database\DatabaseHandler;
+    use classes\GameLogic;
+    use classes\Game;
 
     require_once './vendor/autoload.php';
 
     include_once 'util.php';
 
     $db = new DatabaseHandler();
+    $logic = new GameLogic();
+    $game = new Game($db, $logic);
+
+    # handles post requests
+    $game->post();
 
     if (!isset($_SESSION['board'])) {
         header('Location: restart.php');
@@ -84,7 +91,7 @@
         <div class="turn">
             Turn: <?php if ($player == 0) echo "White"; else echo "Black"; ?>
         </div>
-        <form method="post" action="play.php">
+        <form method="post">
             <select name="piece">
                 <?php
                     foreach ($hand[$player] as $tile => $ct) {
