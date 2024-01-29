@@ -14,15 +14,16 @@
     $game = new Game($db, $logic);
 
     # handles post requests
-    $game->post();
+    $game->handlePostRequest();
 
     if (!isset($_SESSION['board'])) {
         header('Location: restart.php');
         exit(0);
     }
-    $board = $_SESSION['board'];
-    $player = $_SESSION['player'];
-    $hand = $_SESSION['hand'];
+    
+    $board = $game->getBoard();
+    $player = $game->getPlayer();
+    // $hand = $game->getPlayerHand();
 
     $to = [];
     foreach ($GLOBALS['OFFSETS'] as $pq) {
@@ -71,7 +72,7 @@
         <div class="hand">
             White:
             <?php
-                foreach ($hand[0] as $tile => $ct) {
+                foreach ($game->getPlayerHand(0) as $tile => $ct) {
                     for ($i = 0; $i < $ct; $i++) {
                         echo '<div class="tile player0"><span>'.$tile."</span></div> ";
                     }
@@ -81,7 +82,7 @@
         <div class="hand">
             Black:
             <?php
-            foreach ($hand[1] as $tile => $ct) {
+            foreach ($game->getPlayerHand(1) as $tile => $ct) {
                 for ($i = 0; $i < $ct; $i++) {
                     echo '<div class="tile player1"><span>'.$tile."</span></div> ";
                 }
@@ -94,26 +95,26 @@
         <form method="post">
             <select name="piece">
                 <?php
-                    foreach ($hand[$player] as $tile => $ct) {
-                        echo "<option value=\"$tile\">$tile</option>";
+                    foreach ($game->getPlayerHand($game->getPlayer()) as $tile => $ct) {
+                        if ($ct	> 0) echo "<option value=\"$tile\">$tile</option>";
                     }
                 ?>
             </select>
             <select name="to">
                 <?php
                     foreach ($to as $pos) {
-                        echo "<option value=\"$pos\">$pos</option>";
+                        if (!isset($board[$pos])) echo "<option value=\"$pos\">$pos</option>";
                     }
                 ?>
             </select>
             <input type="hidden" name="action" value="play">
             <input type="submit" value="Play">
         </form>
-        <form method="post" action="move.php">
+        <form method="post">
             <select name="from">
                 <?php
                     foreach (array_keys($board) as $pos) {
-                        echo "<option value=\"$pos\">$pos</option>";
+                        if ($board[$pos][0][0] == $player) echo "<option value=\"$pos\">$pos</option>";
                     }
                 ?>
             </select>
@@ -127,15 +128,15 @@
             <input type="hidden" name="action" value="move">
             <input type="submit" value="Move">
         </form>
-        <form method="post" action="pass.php">
+        <form method="post">
         <input type="hidden" name="action" value="pass">
             <input type="submit" value="Pass">
         </form>
-        <form method="post" action="restart.php">
+        <form method="post">
         <input type="hidden" name="action" value="restart">
             <input type="submit" value="Restart">
         </form>
-        <strong><?php if (isset($_SESSION['error'])) echo($_SESSION['error']); unset($_SESSION['error']); ?></strong>
+        <strong><?php if (isset($_SESSION['error'])) echo($_SESSION['error']);?></strong>
         <ol>
             <?php
                 $result = $db->getPreviousMoves($_SESSION['game_id']);
