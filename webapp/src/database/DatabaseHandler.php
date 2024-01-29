@@ -1,6 +1,7 @@
 <?php
 
 namespace database;
+
 use mysqli;
 
 class DatabaseHandler
