@@ -17,7 +17,7 @@ class GameLogic
     
     public function hasNeighBour($a, $board) {
         foreach (array_keys($board) as $b) {
-            if (isNeighbour($a, $b)) return true;
+            if ($this->isNeighbour($a, $b)) return true;
         }
     }
     
@@ -25,7 +25,7 @@ class GameLogic
         foreach ($board as $b => $st) {
             if (!$st) continue;
             $c = $st[count($st) - 1][0];
-            if ($c != $player && isNeighbour($a, $b)) return false;
+            if ($c != $player && $this->isNeighbour($a, $b)) return false;
         }
         return true;
     }
@@ -35,16 +35,18 @@ class GameLogic
     }
     
     public function slide($board, $from, $to) {
-        if (!hasNeighBour($to, $board)) return false;
-        if (!isNeighbour($from, $to)) return false;
+        if (!$this->hasNeighBour($to, $board)) return false;
+        if (!$this->isNeighbour($from, $to)) return false;
         $b = explode(',', $to);
         $common = [];
         foreach ($GLOBALS['OFFSETS'] as $pq) {
             $p = $b[0] + $pq[0];
             $q = $b[1] + $pq[1];
-            if (isNeighbour($from, $p.",".$q)) $common[] = $p.",".$q;
+            if ($this->isNeighbour($from, $p.",".$q)) $common[] = $p.",".$q;
         }
-        if (!$board[$common[0]] && !$board[$common[1]] && !$board[$from] && !$board[$to]) return false;
-        return min(len($board[$common[0]]), len($board[$common[1]])) <= max(len($board[$from]), len($board[$to]));
+
+        # Bug 2 fix
+        if (!isset($board[$common[0]]) && !isset($board[$common[1]]) && !isset($board[$from]) && !isset($board[$to])) return false;
+        return min($this->len($board[$common[0]]), $this->len($board[$common[1]])) <= max($this->len($board[$from]), $this->len($board[$to]));
     }
 }
