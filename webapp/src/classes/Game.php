@@ -80,14 +80,29 @@ class Game
         $this->error = '';
     }
 
+    public function getError()
+    {
+        return $this->error;
+    }
+
     public function getPlayer()
     {
         return $this->player;
+    }
+    
+    public function setPlayer($player)
+    {
+        $this->player = $player;
     }
 
     public function getPlayerHand($index)
     {
         return $this->hand[$index];
+    }
+
+    public function setPlayerHand($index, $hand)
+    {
+        $this->hand[$index] = $hand;
     }
 
     public function getBoard()
@@ -121,13 +136,12 @@ class Game
             $this->error = "Board position has opposing neighbour";
         elseif (array_sum($hand) <= 8 && $hand['Q']) {
             # bug 3 fix
-            if ($hand[$piece] == $hand['Q']) {
+            if ($piece != 'Q') $this->error = 'Must play queen bee';
+            else {
                 $this->setBoard($to, $piece);
                 $this->hand[$player][$piece]--;
                 $this->player = 1 - $this->player;
                 $this->lastMove = $this->db->play($this->gameId, $piece, $to, $this->lastMove);
-            } else {
-                $this->error = 'Must play queen bee';
             }
         } else {
             $this->setBoard($to, $piece);

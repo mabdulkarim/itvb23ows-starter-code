@@ -12,5 +12,7 @@
             "email": "69695051+mabdulkarim@users.noreply.github.com"
         }
     ],
-    "require": {}
+    "require-dev": {
+        "phpunit/phpunit": "^10.5"
+    }
 }
