@@ -70,4 +70,41 @@ class PieceTests extends TestCase
         // Assert that the grasshopper can't move to the same tile he is on by checking the error message
         self::assertEquals('This is not a valid Grasshopper move', $this->game->getError());
     }
+    
+    public function testAntCanMakeUnlimitedSteps()
+    {
+        // Arrange the game state
+        $this->game->setBoard('0,0', 'Q'); // Assume 'Q' is the piece belonging to White
+        $this->game->setBoard('0,1', 'Q'); // Assume 'Q' is the piece belonging to Black
+        $this->game->setBoard('0,-1', 'B'); // Assume 'B' is the piece belonging to White
+        $this->game->setBoard('0,2', 'B'); // Assume 'B' is the piece belonging to Black
+        $this->game->setBoard('0,-2', 'A'); // Assume 'A' is the piece belonging to White
+        $this->game->setBoard('0,3', 'S'); // Assume 'S' is the piece belonging to Black
+
+        $this->game->setPlayer(0);
+        $this->game->setPlayerHand(0, ['B' => 1, 'S' => 2, 'A' => 2, 'G' => 3]);
+
+        // Perform a move - act
+        $this->game->move('0,-2', '1,1');
+
+        // Assert that the Ant can move unlimited steps by checking if error message is empty
+        self::assertEmpty($this->game->getError());
+    }
+
+    public function testAntCannotMoveToTheSameTileHeIsOn()
+    {
+        // Arrange the game state
+        $this->game->setBoard('0,0', 'Q'); // Assume 'Q' is the piece belonging to White
+        $this->game->setBoard('0,1', 'Q'); // Assume 'Q' is the piece belonging to Black
+        $this->game->setBoard('0,-1', 'A'); // Assume 'B' is the piece belonging to White
+
+        $this->game->setPlayer(0);
+        $this->game->setPlayerHand(0, ['B' => 2, 'S' => 2, 'A' => 2, 'G' => 3]);
+
+        // Perform a move - act
+        $this->game->move('0,-1', '0,-1');
+
+        // Assert that the ant can't move to the same tile he is on by checking the error message
+        self::assertEquals('This is not a valid Ant move', $this->game->getError());
+    }
 }
