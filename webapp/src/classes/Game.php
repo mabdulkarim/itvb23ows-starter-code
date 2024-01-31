@@ -184,6 +184,24 @@ class Game
                         }
                     }
                 }
+                if ($tile[1] == 'G'){
+                    if (!$this->validateGrasshopperMove($board, $from, $to)) {
+                        $this->error = 'This is not a valid Grasshopper move';
+                        return;
+                    }
+                }
+                if ($tile[1] == 'A'){
+                    if (!$this->validateAntMove($board, $from, $to)) {
+                        $this->error = 'This is not a valid Ant move';
+                        return;
+                    }
+                }
+                if ($tile[1] == 'S'){
+                    if (!$this->validateSpiderMove($board, $from, $to)) {
+                        $this->error = 'This is not a valid Spider move';
+                        return;
+                    }
+                }
                 if ($all) {
                     $this->error = "Move would split hive";
                 } else {
@@ -212,8 +230,8 @@ class Game
 
     public function pass()
     {
-        $_SESSION['last_move'] = $this->db->pass($_SESSION['game_id'], $_SESSION['last_move']);
-        $_SESSION['player'] = 1 - $_SESSION['player'];
+        $this->lastMove = $this->db->pass($this->gameId, $this->lastMove);
+        $this->player = 1 - $this->player;
     }
 
     public function restart()
@@ -224,5 +242,71 @@ class Game
         $this->gameId = $this->db->restart();
         $this->error = '';
         $this->lastMove = null;
+    }
+
+    private function validateGrasshopperMove($board, $from, $to)
+    {
+        if ($from === $to) {
+            return false;
+        }
+
+        $fromExplode = explode(',', $from);
+        $toExplode = explode(',', $to);
+
+        $direction = [$toExplode[0] - $fromExplode[0], $toExplode[1] - $fromExplode[1]];
+
+        if (!(($direction[0] == 0 && $direction[1] != 0) || ($direction[1] == 0 && $direction[0] != 0) || ($direction[0] == $direction[1]))) {
+            return false;
+        }
+
+        $x = $fromExplode[0] + $direction[0];
+        $y = $fromExplode[1] + $direction[1];
+
+        while ($x != $toExplode[0] || $y != $toExplode[1]) {
+            $pos = $x . "," . $y;
+
+            if (isset($board[$pos])) {
+                return false;
+            }
+
+            $x += $direction[0];
+            $y += $direction[1];
+        }
+
+        return true;
+    }
+
+    private function validateAntMove($board, $from, $to)
+    {
+        if ($from === $to || isset($board[$to]) || !$this->logic->hasNeighBour($to, $board)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private function validateSpiderMove($board, $from, $to)
+    {
+        if ($from === $to || isset($board[$to]) || !$this->logic->hasNeighBour($to, $board)) {
+            return false;
+        }
+
+        $amountOfSteps = $this->calculateSteps($from, $to);
+
+        if ($amountOfSteps != 3) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private function calculateSteps($from, $to) {
+        $fromExplode = explode(',', $from);
+        $toExplode = explode(',', $to);
+
+        $horizontalDistance = abs($fromExplode[0] - $toExplode[0]); 
+        $verticalDistance = abs($fromExplode[1] - $toExplode[1]); 
+
+        return $horizontalDistance + $verticalDistance;
     }
 }
