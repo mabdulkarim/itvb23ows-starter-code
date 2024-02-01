@@ -191,4 +191,90 @@ class GameTests extends TestCase
         // Assert that player cannot pass when hand is not empty by checking the error message
         self::assertEquals('Cannot pass', $this->game->getError());
     }
+
+    public function testPlayerBlackWonTheGame()
+    {   
+        // Arrange the game state
+        $this->game->setBoard('0,2', 'B'); 
+        $this->game->setBoard('0,1', 'Q'); // Assume 'Q' is the piece belonging to player White
+        $this->game->setBoard('0,0', 'B'); 
+        $this->game->setBoard('1,1', 'S'); 
+        $this->game->setBoard('-1,1', 'A'); 
+        $this->game->setBoard('-1,2', 'A'); 
+        $this->game->setBoard('1,0', 'S'); 
+        $player = $this->game->setPlayer(1); // Black player
+        $board = $this->game->getBoard();
+
+        // Perform the win check - act
+        $won = $this->game->hasWon($board, $player);
+
+        // Assert that player Black won the game
+        self::assertTrue($won);
+    }
+
+    public function testPlayerWhiteWonTheGame()
+    {
+        // Arrange the game state
+        $this->game->setBoard('0,2', 'B'); 
+        $this->game->setBoard('0,1', 'Q'); // Assume 'Q' is the piece belonging to player Black
+        $this->game->setBoard('0,0', 'B'); 
+        $this->game->setBoard('1,1', 'S'); 
+        $this->game->setBoard('-1,1', 'A'); 
+        $this->game->setBoard('-1,2', 'A'); 
+        $this->game->setBoard('1,0', 'S'); 
+        $player = $this->game->setPlayer(0); // White player
+        $board = $this->game->getBoard();
+
+        // Perform the win check - act
+        $won = $this->game->hasWon($board, $player);
+
+        // Assert that player White won the game
+        self::assertTrue($won);
+    }
+
+    public function testPlayerHasNotWonTheGame()
+    {
+        // Arrange the game state
+        $this->game->setBoard('0,2', 'B'); 
+        $this->game->setBoard('0,1', 'Q'); // Assume 'Q' is the piece belonging to player Black
+        $this->game->setBoard('0,0', 'B'); 
+        $this->game->setBoard('1,1', 'S'); 
+        $this->game->setBoard('-1,1', 'A'); 
+        $this->game->setBoard('-1,2', 'A'); 
+        $player = $this->game->setPlayer(0); // White player
+        $board = $this->game->getBoard();
+
+        // Perform the win check - act
+        $won = $this->game->hasWon($board, $player);
+
+        // Assert that player White hasn't won yet
+        self::assertFalse($won);
+    }
+
+    public function testDrawGame()
+    {
+        // Arrange the game state
+        $this->game->setBoard('0,-1', 'B'); 
+        $this->game->setBoard('0,0', 'Q'); // Assume 'Q' is the piece belonging to player White
+        $this->game->setBoard('1,0', 'Q'); // Assume 'Q' is the piece belonging to player Black
+        $this->game->setBoard('1,-1', 'B'); 
+        $this->game->setBoard('2,-1', 'S'); 
+        $this->game->setBoard('-1,0', 'A'); 
+        $this->game->setBoard('2,0', 'A'); 
+        $this->game->setBoard('1,1', 'S');
+        $this->game->setBoard('0,1', 'B');
+        $this->game->setBoard('-1,1', 'A');
+        $board = $this->game->getBoard();
+
+        // Perform the win check - act
+        $playerWhite = $this->game->setPlayer(0); // White player
+        $whiteWon = $this->game->hasWon($board, $playerWhite);
+
+        $playerBlack = $this->game->setPlayer(1); // Black player
+        $blackWon = $this->game->hasWon($board, $playerBlack); 
+
+        // Assert that the game is a draw
+        $draw = $whiteWon && $blackWon;
+        self::assertTrue($draw);
+    }
 }
