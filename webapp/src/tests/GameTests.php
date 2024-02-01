@@ -161,4 +161,34 @@ class GameTests extends TestCase
         // Assert that the 'from' position is empty
         self::assertEquals('Move would split hive', $this->game->getError());
     }
+
+    # Feature 4
+    public function testCannotPassWhenBoardIsEmpty()
+    {
+        // Arrange the game state
+        $this->game->setBoard('0', '0'); // Set empty board
+        $this->game->setPlayer(0); // White player
+        $this->game->setPlayerHand(0, ['Q' => 1, 'B' => 2, 'S' => 2, 'A' => 3, 'G' => 3]);
+
+        // Perform a pass - act
+        $this->game->pass();
+
+        // Assert that player cannot pass when board is empty by checking the error message
+        self::assertEquals('Cannot pass', $this->game->getError());
+    }
+
+    public function testCannotPassWhenHandIsNotEmpty()
+    {
+        // Arrange the game state
+        $this->game->setBoard('0,0', 'Q'); // Assume 'Q' is the piece belonging to player 0
+        $this->game->setBoard('0,1', 'Q'); // Assume 'Q' is the piece belonging to player 1
+        $this->game->setPlayer(0); // White player
+        $this->game->setPlayerHand(0, ['B' => 2, 'S' => 2, 'A' => 3, 'G' => 3]);
+
+        // Perform a pass - act
+        $this->game->pass();
+
+        // Assert that player cannot pass when hand is not empty by checking the error message
+        self::assertEquals('Cannot pass', $this->game->getError());
+    }
 }
