@@ -68,7 +68,7 @@ class PieceTests extends TestCase
         $this->game->move('0,-1', '0,-1');
 
         // Assert that the grasshopper can't move to the same tile he is on by checking the error message
-        self::assertEquals('This is not a valid Grasshopper move', $this->game->getError());
+        self::assertEquals('Tile must move', $this->game->getError());
     }
     
     public function testAntCanMakeUnlimitedSteps()
@@ -105,7 +105,7 @@ class PieceTests extends TestCase
         $this->game->move('0,-1', '0,-1');
 
         // Assert that the ant can't move to the same tile he is on by checking the error message
-        self::assertEquals('This is not a valid Ant move', $this->game->getError());
+        self::assertEquals('Tile must move', $this->game->getError());
     }
 
     public function testSpiderShouldMoveExactlyThreeSteps()
@@ -142,7 +142,7 @@ class PieceTests extends TestCase
         $this->game->move('0,-1', '0,-1');
 
         // Assert that the spider can't move to the same tile he is on by checking the error message
-        self::assertEquals('This is not a valid Spider move', $this->game->getError());
+        self::assertEquals('Tile must move', $this->game->getError());
     }
 
     public function testSpiderCannotMoveToAnOccupiedPosition()
@@ -160,6 +160,6 @@ class PieceTests extends TestCase
         $this->game->move('0,-1', '0,2');
 
         // Assert that the spider can't move to an occupied position by checking the error message
-        self::assertEquals('This is not a valid Spider move', $this->game->getError());
+        self::assertEquals('Tile not empty', $this->game->getError());
     }
 }
