@@ -1,0 +1,45 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Build') {
+            steps {
+                echo 'Building the project...'
+                checkout scm
+            }
+        }
+
+        stage('Test') {
+            steps {
+                echo 'Running tests...'
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                script {
+                    scannerHome = tool 'SonarQube-Scanner-Mohamed'
+                }
+                withSonarQubeEnv('SonarQube-Server-Mohamed') {
+                    sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=Mohamed -Dsonar.login=squ_2d93c700f7e12f75f4d3aa87f7ab13ea1d5cdf7d"
+                }
+                echo 'Sonarqube working...'
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                echo 'Deploying...'
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Build successful! Deploying...'
+        }
+        failure {
+            echo 'Build failed! Notify the team...'
+        }
+    }
+}
