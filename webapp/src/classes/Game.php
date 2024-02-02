@@ -15,6 +15,7 @@ class Game
     private $board;
     private $lastMove;
     private $error;
+    private $aiMoveNumber;
 
     public function __construct($databaseHandler, $logic)
     {
@@ -27,52 +28,7 @@ class Game
         $this->board = $_SESSION['board'];
         $this->lastMove = $_SESSION['last_move'] ?? null;
         $this->error = $_SESSION['error'] ?? '';
-    }
-
-    public function handlePostRequest()
-    {
-        $this->clearError();
-
-        if (isset($_POST['action'])) {
-            $this->processRequests($_POST['action']);
-            $this->updateSessionState();
-            $this->redirectToIndex();
-        }
-    }
-
-    private function processRequests($actionRequest)
-    {
-        switch($actionRequest) {
-            case 'play':
-                $piece = $_POST['piece'];
-                $to = $_POST['to'];
-                $this->play($piece, $to);
-                break;
-            case 'move':
-                $from = $_POST['from'];
-                $to = $_POST['to'];
-                $this->move($from, $to);
-                break;
-            case 'pass':
-                $this->pass();
-                break;
-            case 'restart':
-                $this->restart();
-                break;
-            // ca se 'undo':
-            //     $game->undo();
-            //     break;
-        }
-    }
-
-    private function updateSessionState()
-    {
-        $_SESSION["game_id"] = $this->gameId;
-        $_SESSION["player"] = $this->player;
-        $_SESSION["hand"] = $this->hand;
-        $_SESSION["board"] = $this->board;
-        $_SESSION["last_move"] = $this->lastMove;
-        $_SESSION["error"] = $this->error;
+        $this->aiMoveNumber = $_SESSION['ai_move_number'] ?? 0;
     }
 
     private function clearError()
@@ -115,9 +71,83 @@ class Game
         $this->board[$to] = [[$this->player, $piece]];
     }
 
+    public function handlePostRequest()
+    {
+        $this->clearError();
+        if (isset($_POST['action'])) {
+            $this->processRequests($_POST['action']);
+            $this->updateSessionState();
+            $this->redirectToIndex();
+        }
+    }
+
+    private function processRequests($actionRequest)
+    {
+        switch($actionRequest) {
+            case 'play':
+                $piece = $_POST['piece'];
+                $to = $_POST['to'];
+                $this->play($piece, $to);
+                break;
+            case 'move':
+                $from = $_POST['from'];
+                $to = $_POST['to'];
+                $this->move($from, $to);
+                break;
+            case 'pass':
+                $this->pass();
+                break;
+            case 'restart':
+                $this->restart();
+                break;
+            case 'ai':
+                $this->ai();
+                break;
+            // case 'undo':
+            //     $this->undo();
+            //     break;
+        }
+    }
+
+    private function updateSessionState()
+    {
+        $_SESSION["game_id"] = $this->gameId;
+        $_SESSION["player"] = $this->player;
+        $_SESSION["hand"] = $this->hand;
+        $_SESSION["board"] = $this->board;
+        $_SESSION["last_move"] = $this->lastMove;
+        $_SESSION["error"] = $this->error;
+    }
+
     private function redirectToIndex()
     {
         header('Location: index.php');
+    }
+
+    public function ai()
+    {
+        $url = 'http://ai:5000/';
+        $body = [
+            'move_number' => $this->aiMoveNumber++,
+            'hand' => $this->hand,
+            'board' => $this->board
+        ];
+
+        $options = [
+            'http' => [
+                'header' => "Content-Type: application/json\r\n",
+                'method' => 'POST',
+                'content' => json_encode($body),
+            ],
+        ];
+
+        $context = stream_context_create($options);
+        $result = json_decode(file_get_contents($url, false, $context));
+
+        if ($result[0] == 'play') $this->play($result[1], $result[2]);
+        elseif ($result[0] == 'move') $this->move($result[1], $result[2]);
+        elseif ($result[0] == 'pass') $this->pass();
+        else $this->error = 'AI returned invalid move';
     }
 
     public function play($piece, $to)
@@ -153,85 +183,34 @@ class Game
 
     public function move($from, $to)
     {
+        if ($this->canMove($from, $to)) {
+            return;
+        }
 
-        $player = $this->player;
-        $board = $this->board;
-        $hand = $this->hand[$player];
-        unset($_SESSION['error']);
+        $tile = array_pop($this->board[$from]);
 
-        if (!isset($board[$from]))
-            $this->error = 'Board position is empty';
-        elseif ($board[$from][count($board[$from])-1][0] != $player)
-            $this->error = "Tile is not owned by player";
-        elseif ($hand['Q'])
-            $this->error = "Queen bee is not played";
-        else {
-            $tile = array_pop($board[$from]);
-            if (!$this->logic->hasNeighBour($to, $board))
-                $this->error = "Move would split hive";
-            else {
-                $all = array_keys($board);
-                $queue = [array_shift($all)];
-                while ($queue) {
-                    $next = explode(',', array_shift($queue));
-                    foreach ($GLOBALS['OFFSETS'] as $pq) {
-                        list($p, $q) = $pq;
-                        $p += $next[0];
-                        $q += $next[1];
-                        if (in_array("$p,$q", $all)) {
-                            $queue[] = "$p,$q";
-                            $all = array_diff($all, ["$p,$q"]);
-                        }
-                    }
-                }
-                if ($tile[1] == 'G'){
-                    if (!$this->validateGrasshopperMove($board, $from, $to)) {
-                        $this->error = 'This is not a valid Grasshopper move';
-                        return;
-                    }
-                }
-                if ($tile[1] == 'A'){
-                    if (!$this->validateAntMove($board, $from, $to)) {
-                        $this->error = 'This is not a valid Ant move';
-                        return;
-                    }
-                }
-                if ($tile[1] == 'S'){
-                    if (!$this->validateSpiderMove($board, $from, $to)) {
-                        $this->error = 'This is not a valid Spider move';
-                        return;
-                    }
-                }
-                if ($all) {
-                    $this->error = "Move would split hive";
-                } else {
-                    if ($from == $to) $this->error = 'Tile must move';
-                    elseif (isset($board[$to]) && $tile[1] != "B") $this->error = 'Tile not empty';
-                    elseif ($tile[1] == "Q" || $tile[1] == "B") {
-                        if (!$this->logic->slide($board, $from, $to))
-                            $this->error = 'Tile must slide';
-                    }
-                }
-            }
-            if (isset($_SESSION['error'])) {
-                if (isset($board[$from])) array_push($board[$from], $tile);
-                else $board[$from] = [$tile];
-            } else {
-                if (isset($board[$to])) array_push($board[$to], $tile);
-                else $board[$to] = [$tile];
-                $this->player = 1 - $player;
-                $this->lastMove = $this->db->move($this->gameId, $from, $to, $this->lastMove);
-                # bug 4 fix
-                unset($board[$from]);
-            }
-            $this->board = $board;
+        if (isset($this->board[$to])) {
+            array_push($this->board[$to], $tile);
+        } else {
+            $this->board[$to] = [$tile];
+        }
+
+        $this->player = 1 - $this->player;
+        $this->lastMove = $this->db->move($this->gameId, $from, $to, $this->lastMove);
+
+        if (empty($this->board[$from])) {
+            unset($this->board[$from]);
         }
     }
 
     public function pass()
     {
-        $this->lastMove = $this->db->pass($this->gameId, $this->lastMove);
-        $this->player = 1 - $this->player;
+        if ($this->canPass()) {
+            $this->lastMove = $this->db->pass($this->gameId, $this->lastMove);
+            $this->player = 1 - $this->player;
+        } else {
+            $this->error = 'Cannot pass';
+        }
     }
 
     public function restart()
@@ -309,4 +288,173 @@ class Game
 
         return $horizontalDistance + $verticalDistance;
     }
+
+    private function getAllPositions()
+    {
+        $to = [];
+        foreach ($GLOBALS['OFFSETS'] as $pq) {
+            foreach (array_keys($this->board) as $pos) {
+                $pq2 = explode(',', $pos);
+                $to[] = ($pq[0] + $pq2[0]).','.($pq[1] + $pq2[1]);
+            }
+        }
+        $to = array_unique($to);
+        if (!count($to)) $to[] = '0,0';
+
+        return $to;
+    }
+
+    private function getAllPossiblePositions()
+    {
+        $allPositions = $this->getAllPositions();
+
+        return array_filter($allPositions, function($position) {
+            return $this->checkValidPosition($position);
+        });
+    }
+
+    private function checkValidPosition($position)
+    {
+        $isOccupied = isset($this->board[$position]);
+        $hasNoNeighbours = !$this->logic->hasNeighBour($position, $this->board);
+        $tilesPlayed = array_sum($this->hand[$this->player]);
+        $queenNotPlayed = $tilesPlayed <= 8 && $this->hand[$this->player]['Q'];
+        $neighbourColorIssue = $tilesPlayed < 11 && !$this->logic->neighboursAreSameColor($this->player, $position, $this->board);
+        
+        if ($isOccupied || $hasNoNeighbours || $neighbourColorIssue || $queenNotPlayed) {
+            return false;
+        }
+    
+        return true;
+    }
+    
+    public function canPass()
+    {
+        if (!empty($this->getAllPossiblePositions())) {
+            foreach ($this->board as $position => $piece) {
+                if ($piece[0][0] == $this->player) {
+                    foreach ($this->getAllPositions() as $possibleMove) {
+                        if ($this->canMove($position, $possibleMove)) return false;
+                    }
+                }
+            }
+        } else if (count($this->hand[$this->player]) > 0) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private function canMove($from, $to)
+    {
+        $player = $this->player;
+        $board = $this->board;
+        $hand = $this->hand[$player];
+        unset($_SESSION['error']);
+
+        if (!isset($board[$from])) {
+            $this->error = 'Board position is empty';
+        } elseif ($board[$from][count($board[$from])-1][0] != $player) {
+            $this->error = "Tile is not owned by player";
+        } elseif ($hand['Q']) {
+            $this->error = "Queen bee is not played";
+        } elseif ($from == $to) {
+            $this->error = 'Tile must move';
+        } elseif (isset($board[$to]) && $board[$from][count($board[$from])-1][1] != "B") {
+            $this->error = 'Tile not empty';
+        } elseif (!$this->logic->hasNeighBour($to, $board)) {
+            $this->error = "Move would split hive";
+        } else {
+            $tile = end($board[$from]);
+            if ($tile[1] == 'G' && !$this->validateGrasshopperMove($board, $from, $to)) {
+                $this->error = 'This is not a valid Grasshopper move';
+            } elseif ($tile[1] == 'A' && !$this->validateAntMove($board, $from, $to)) {
+                $this->error = 'This is not a valid Ant move';
+            } elseif ($tile[1] == 'S' && !$this->validateSpiderMove($board, $from, $to)) {
+                $this->error = 'This is not a valid Spider move';
+            } else {
+                $allPositionsBeforeMove = array_keys($board);
+                if (($key = array_search($from, $allPositionsBeforeMove)) !== false) {
+                    unset($allPositionsBeforeMove[$key]);
+                }
+                $allPositionsBeforeMove[] = $to; 
+                if (!$this->checkHiveConnectivity($allPositionsBeforeMove)) {
+                    $this->error = "Move would split hive";
+                } else {
+                    if (($tile[1] == "Q" || $tile[1] == "B") && !$this->logic->slide($board, $from, $to)) {
+                        $this->error = 'Tile must slide';
+                    }
+                }
+            }
+        }
+
+        return $this->error !== '';
+    }
+    
+    private function checkHiveConnectivity($positions)
+    {
+        if (empty($positions)) return true; 
+
+        $visited = [];
+        $queue = [current($positions)]; 
+        while ($queue) {
+            $current = array_shift($queue);
+            if (!in_array($current, $visited)) {
+                $visited[] = $current;
+                $nextPositions = $this->getAdjacentPositions($current, $positions);
+                foreach ($nextPositions as $next) {
+                    if (!in_array($next, $queue) && !in_array($next, $visited)) {
+                        $queue[] = $next;
+                    }
+                }
+            }
+        }
+
+        return count($visited) == count($positions);
+    }
+
+    private function getAdjacentPositions($current, $positions)
+    {
+        list($x, $y) = explode(',', $current);
+        $adjacent = [];
+
+        foreach ($GLOBALS['OFFSETS'] as $offset) {
+            list($dx, $dy) = $offset;
+            $neighbor = ($x + $dx) . ',' . ($y + $dy);
+            if (in_array($neighbor, $positions)) {
+                $adjacent[] = $neighbor;
+            }
+        }
+
+        return $adjacent;
+    }
+
+    function hasWon($board, $player)
+    {
+        $isQueenSurrounded = false;
+    
+        foreach ($board as $coordinate => $piece) {
+            $tile = $piece[count($piece) - 1];
+    
+            if ($tile[0] === $player && $tile[1] === 'Q') {
+                list($x, $y) = explode(',', $coordinate);
+                $encircled = 0;
+    
+                foreach ($GLOBALS['OFFSETS'] as $direction) {
+                    $adjacent = ($x + $direction[0]) . ',' . ($y + $direction[1]);
+                    if (array_key_exists($adjacent, $board)) {
+                        $encircled += 1; 
+                    }
+                }
+
+                if ($encircled === 6) {
+                    $isQueenSurrounded = true;
+                    break;
+                }
+            }
+        }
+    
+        return $isQueenSurrounded;
+    }
+    
 }
