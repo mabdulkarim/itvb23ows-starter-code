@@ -277,4 +277,59 @@ class GameTests extends TestCase
         $draw = $whiteWon && $blackWon;
         self::assertTrue($draw);
     }
+
+    public function testCannotUndoWhenNoPiecesPlayed()
+    {   
+        // Arrange the game state
+        // Perform an undo - act
+        $this->game->undo();
+
+        // Assert that player cannot undo when no pieces have been played by checking the error message
+        self::assertEquals('There are no played pieces yet, cannot undo', $this->game->getError());
+    }
+
+    public function testCannotUndoWhenNoPreviousMoveIsPlayed()
+    {
+        // Arrange the game state
+        $this->game->setBoard('0,0', 'Q'); // Assume 'Q' is the piece belonging to player white
+        $this->game->setPlayer(0); // White player
+        $this->game->setPlayerHand(0, ['B' => 2, 'S' => 2, 'A' => 3, 'G' => 3]);
+
+        // Perform an undo - act
+        $this->game->undo();
+
+        // Assert that player cannot undo when no previous move is played by checking the error message
+        self::assertEquals('Cannot undo', $this->game->getError());
+    }
+
+    public function testUndoIsPossibleVariantOne()
+    {
+        // Arrange the game state
+        $this->game->setBoard('0,0', 'Q'); // Assume 'Q' is the piece belonging to player white
+        $this->game->setBoard('0,1', 'Q'); // Assume 'Q' is the piece belonging to player black
+        $this->game->setPlayer(0); // White player
+        $this->game->setPlayerHand(0, ['B' => 2, 'S' => 2, 'A' => 3, 'G' => 3]);
+        
+        // Perform an undo - act
+        $this->game->undo();
+
+        // Assert that player cannot undo when no previous move is played by checking the error message
+        self::assertFalse($this->game->getError());
+    }
+
+    public function testUndoIsPossibleVariantTwo()
+    {
+        // Arrange the game state
+        $this->game->setBoard('0,0', 'Q'); // Assume 'Q' is the piece belonging to player white
+        $this->game->setBoard('0,1', 'Q'); // Assume 'Q' is the piece belonging to player black
+        $this->game->setBoard('0,-1', 'B'); // Assume 'Q' is the piece belonging to player white
+        $this->game->setPlayer(0); // White player
+        $this->game->setPlayerHand(0, ['B' => 1, 'S' => 2, 'A' => 3, 'G' => 3]);
+        
+        // Perform an undo - act
+        $this->game->undo();
+
+        // Assert that player cannot undo when no previous move is played by checking the error message
+        self::assertFalse($this->game->getError());
+    }
 }
